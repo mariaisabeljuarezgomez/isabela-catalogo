@@ -22,9 +22,8 @@ export default function App() {
       setError(null)
 
       const { data, error } = await supabase
-        .from('products')
+        .from('active_campaign_products')
         .select('id, brand, sku, name, category, price')
-        .eq('campaign_id', '8a110d9e-4011-4d20-9495-21d23f0352b2')
         .order('brand')
         .order('sku')
 
