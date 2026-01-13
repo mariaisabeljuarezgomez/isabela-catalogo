@@ -1,35 +1,62 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useState } from 'react'
 import './App.css'
+import { supabase } from './lib/supabaseClient'
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+type Product = {
+  id: string
+  brand: string
+  sku: string
+  name: string
+  category: string | null
+  price: number
 }
 
-export default App
+export default function App() {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [products, setProducts] = useState<Product[]>([])
+
+  useEffect(() => {
+    const run = async () => {
+      setLoading(true)
+      setError(null)
+
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, brand, sku, name, category, price')
+        .eq('campaign_id', '8a110d9e-4011-4d20-9495-21d23f0352b2')
+        .order('brand')
+        .order('sku')
+
+      if (error) {
+        setError(error.message)
+        setProducts([])
+      } else {
+        setProducts((data ?? []) as Product[])
+      }
+
+      setLoading(false)
+    }
+
+    run()
+  }, [])
+
+  return (
+    <div style={{ padding: 16, fontFamily: 'system-ui, sans-serif' }}>
+      <h1>ISABELA (prueba Supabase)</h1>
+
+      {loading && <p>Cargando...</p>}
+      {error && <p style={{ color: 'crimson' }}>Error: {error}</p>}
+
+      {!loading && !error && (
+        <ul>
+          {products.map((p) => (
+            <li key={p.id}>
+              <strong>{p.brand}</strong> — {p.name} (SKU {p.sku}) — ${p.price}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
